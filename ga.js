@@ -1,32 +1,34 @@
-// Daniel Shiffman
-// The Coding Train
-// Traveling Salesperson with Genetic Algorithm
-
-// https://thecodingtrain.com/CodingChallenges/035.4-tsp.html
-// https://youtu.be/M3KTWnTrU_c
-// https://thecodingtrain.com/CodingChallenges/035.5-tsp.html
-// https://youtu.be/hnxn6DtLYcY
-
-// https://editor.p5js.org/codingtrain/sketches/EGjTrkkf9
+// Code written by Faical Ghoul https://instagram.com/faycaldgl
+// Inspired by Daniel Shiffman "Traveling Salesperson with Genetic Algorithm"
+// and "Earthquake Data visualization"
 
 function calculateFitness() {
-  var currentRecord = Infinity;
   for (var i = 0; i < population.length; i++) {
     var d = calcDistance(cities, population[i]);
     if (d < recordDistance) {
       recordDistance = d;
       bestEver = population[i];
     }
-    // if (d < currentRecord) {
-    //   currentRecord = d;
-    //   currentBest = population[i];
-    // }
-
-    // This fitness function has been edited from the original video
-    // to improve performance, as discussed in The Nature of Code 9.6 video,
-    // available here: https://www.youtube.com/watch?v=HzaLIO9dLbA
     fitness[i] = 1 / (pow(d, 8) + 1);
   }
+}
+function swap(a, i, j) {
+  var temp = a[i];
+  a[i] = a[j];
+  a[j] = temp;
+}
+
+function calcDistance(points, order) {
+  var sum = 0;
+  for (var i = 0; i < order.length - 1; i++) {
+    var cityAIndex = order[i];
+    var cityA = points[cityAIndex].coordinates;
+    var cityBIndex = order[i + 1];
+    var cityB = points[cityBIndex].coordinates;
+    var d = dist(cityA.x, cityA.y, cityB.x, cityB.y);
+    sum += d;
+  }
+  return sum;
 }
 
 function normalizeFitness() {
@@ -45,7 +47,7 @@ function nextGeneration() {
     var orderA = pickOne(population, fitness);
     var orderB = pickOne(population, fitness);
     var order = crossOver(orderA, orderB);
-    mutate(order, 0.01);
+    mutate(order, 0.1);
     newPopulation[i] = order;
   }
   population = newPopulation;
@@ -64,22 +66,24 @@ function pickOne(list, prob) {
 }
 
 function crossOver(orderA, orderB) {
-  var start = floor(random(orderA.length));
-  var end = floor(random(start + 1, orderA.length));
-  var neworder = orderA.slice(start, end);
-  for (var i = 0; i < orderB.length; i++) {
+  var start = floor(random(1, orderA.length - 2));
+  var end = floor(random(start + 1, orderA.length - 2));
+  var neworder = [0];
+  neworder.push(...orderA.slice(start, end));
+  for (var i = 1; i < orderB.length - 1; i++) {
     var city = orderB[i];
     if (!neworder.includes(city)) {
       neworder.push(city);
     }
   }
+  neworder.push(orderA.length - 1);
   return neworder;
 }
 
 function mutate(order, mutationRate) {
-  for (var i = 0; i < cities.length; i++) {
+  for (var i = 1; i < cities.length - 1; i++) {
     if (random(1) < mutationRate) {
-      var indexA = floor(random(order.length));
+      var indexA = floor(random(1, order.length - 2));
       var indexB = (indexA + 1) % cities.length;
       swap(order, indexA, indexB);
     }
